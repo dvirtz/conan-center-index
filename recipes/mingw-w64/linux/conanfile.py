@@ -172,14 +172,13 @@ class MingwConan(ConanFile):
                 #     ln -s /usr/local/x86_64-w64-mingw32 /usr/local/mingw
                 #     or, for sysroot, type:
                 #     ln -s /mypath/x86_64-w64-mingw32 /mypath/mingw
-                self.run("ln -s {} {}".format(os.path.join(self.package_folder, target_tag),
-                                              os.path.join(self.package_folder, 'mingw')))
+                # create relative symlinks so they'll resolve correctly on consumer's machine
+                os.symlink(os.path.join(os.curdir, self._target_tag), os.path.join(self.package_folder, 'mingw'))
                 # Step 5) Symlink x86_64-w64-mingw32/lib directory as x86_64-w64-mingw32/lib64:
                 # ln -s /usr/local/x86_64-w64-mingw32/lib /usr/local/x86_64-w64-mingw32/lib64
                 # or, for sysroot:
                 #     ln -s /mypath/x86_64-w64-mingw32/lib /mypath/x86_64-w64-mingw32/lib64
-                self.run("ln -s {} {}".format(os.path.join(self.package_folder, target_tag, 'lib'),
-                                              os.path.join(self.package_folder, target_tag, 'lib64')))
+                os.symlink(os.path.join(os.curdir, 'lib'), os.path.join(self.package_folder, self._target_tag, 'lib64'))
 
             self.output.info("Building core gcc ...")
             os.mkdir(os.path.join(self.build_folder, "gcc"))
@@ -264,13 +263,6 @@ class MingwConan(ConanFile):
         tools.rmdir(os.path.join(self.package_folder, "share", "man"))
         tools.rmdir(os.path.join(self.package_folder, "share", "doc"))
         tools.rmdir(os.path.join(self.package_folder, "lib", "pkgconfig"))
-        # replace with relative symlinks so they'll resolve correctly on consumer's machine
-        os.unlink(os.path.join(self.package_folder, 'mingw'))
-        os.unlink(os.path.join(self.package_folder, self._target_tag, 'lib64'))
-        self.run("ln -s {} {}".format(os.path.join(os.curdir, self._target_tag),
-                                        os.path.join(self.package_folder, 'mingw')))
-        self.run("ln -s {} {}".format(os.path.join(os.curdir, 'lib'),
-                                        os.path.join(self.package_folder, self._target_tag, 'lib64')))
 
     def package_info(self):
         if getattr(self, "settings_target", None):
